@@ -67,7 +67,8 @@
             z-index: 1000;
         }
         .popup input,
-        .popup select {
+        .popup select,
+        .popup textarea {
             width: 100%;
             padding: 8px;
             margin: 10px 0;
@@ -97,11 +98,20 @@
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 999;
         }
+        .add-button {
+            border-radius: 25px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border: none;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
     <h1>Painel de Pedidos</h1>
-    <button onclick="adicionarPedido()">Adicionar Pedido</button>
+    <button class="add-button" onclick="adicionarPedido()">Adicionar Pedido</button>
     <div class="container">
         <div class="status-column" id="efetuados" onclick="toggleStatus('efetuados')">
             <h2>Efetuados <span id="efetuados-count">0</span></h2>
@@ -127,51 +137,26 @@
         <h3>Adicionar Pedido</h3>
         <label for="nome">Nome do Cliente:</label>
         <input type="text" id="nome" placeholder="Nome do Cliente" />
-        <label for="pedido">Pedido:</label>
-        <input type="text" id="pedido" placeholder="Pedido" />
-        <label for="pagamento">Status do Pagamento:</label>
-        <input type="text" id="pagamento" placeholder="Status do Pagamento" />
+        
+        <div class="campo-container">
+            <label for="pedido">Pedido:</label>
+            <textarea id="pedido" placeholder="Pedido" rows="4"></textarea>
+        </div>
+
+        <div class="campo-container">
+            <label for="pagamento">Status do Pagamento:</label>
+            <select id="pagamento">
+                <option value="Pago completo">Pago completo</option>
+                <option value="Pago 50%">Pago 50%</option>
+                <option value="Pendente">Pendente</option>
+            </select>
+        </div>
+
         <label for="dataPedido">Data do Pedido:</label>
-        <input type="text" id="dataPedido" placeholder="Data do Pedido" />
-        <label for="dataEntrega">Data e Hora da Entrega:</label>
-        <input type="text" id="dataEntrega" placeholder="Data e Hora da Entrega" />
+        <input type="date" id="dataPedido" />
+        <label for="horaEntrega">Hora da Entrega:</label>
+        <input type="time" id="horaEntrega" />
         <button onclick="salvarNovoPedido()">Salvar Pedido</button>
-        <button class="cancel-button" onclick="fecharPopup()">Cancelar</button>
-    </div>
-
-    <!-- Pop-up para mover pedido -->
-    <div class="popup" id="popupMover">
-        <h3>Escolha a nova etapa:</h3>
-        <select id="nova-etapa">
-            <option value="efetuados">Efetuados</option>
-            <option value="agendados">Agendados</option>
-            <option value="entregues">Entregues</option>
-            <option value="cancelados">Cancelados</option>
-        </select>
-        <button onclick="moverPedidoConfirmado()">Mover Pedido</button>
-    </div>
-
-    <!-- Pop-up para edição -->
-    <div class="popup" id="popupEditar">
-        <h3>Editar Pedido</h3>
-        <label for="editar-nome">Nome do Cliente:</label>
-        <input type="text" id="editar-nome" placeholder="Nome do Cliente" />
-        <label for="editar-pedido">Pedido:</label>
-        <input type="text" id="editar-pedido" placeholder="Pedido" />
-        <label for="editar-pagamento">Status do Pagamento:</label>
-        <input type="text" id="editar-pagamento" placeholder="Status do Pagamento" />
-        <label for="editar-dataPedido">Data do Pedido:</label>
-        <input type="text" id="editar-dataPedido" placeholder="Data do Pedido" />
-        <label for="editar-dataEntrega">Data e Hora da Entrega:</label>
-        <input type="text" id="editar-dataEntrega" placeholder="Data e Hora da Entrega" />
-        <button onclick="salvarEdicao()">Salvar Alterações</button>
-        <button class="cancel-button" onclick="fecharPopup()">Cancelar</button>
-    </div>
-
-    <!-- Pop-up para confirmação de exclusão -->
-    <div class="popup" id="popupExcluir">
-        <h3>Tem certeza que deseja excluir este pedido?</h3>
-        <button onclick="excluirPedido()">Excluir</button>
         <button class="cancel-button" onclick="fecharPopup()">Cancelar</button>
     </div>
 
@@ -189,111 +174,79 @@
             document.getElementById("entregues-count").innerText = pedidos.filter(p => p.status === "entregues").length;
             document.getElementById("cancelados-count").innerText = pedidos.filter(p => p.status === "cancelados").length;
 
-            document.querySelectorAll(".status-column").forEach(coluna => {
-                const colunaId = coluna.id;
-                const lista = coluna.querySelector(`#${colunaId}-list`);
-                lista.innerHTML = '';
-                pedidos.filter(pedido => pedido.status === colunaId).forEach((pedido, index) => {
-                    let card = document.createElement("div");
-                    card.classList.add("pedido-card");
-                    card.innerHTML = `
-                        <strong>${pedido.nome}</strong><br>Pedido: ${pedido.pedido}<br>Pagamento: ${pedido.pagamento}<br>Data: ${pedido.dataPedido}<br>Entrega: ${pedido.dataEntrega}
-                        <br><button onclick="abrirPopupMover(${index})">Mover</button>
-                        <button onclick="abrirPopupEditar(${index})">Editar</button>
-                        <button onclick="abrirPopupExcluir(${index})">Excluir</button>`;
-                    lista.appendChild(card);
+            ["efetuados", "agendados", "entregues", "cancelados"].forEach(status => {
+                let lista = document.getElementById(status + "-list");
+                lista.innerHTML = "";
+                pedidos.filter(p => p.status === status).forEach(p => {
+                    let pedidoElement = document.createElement("div");
+                    pedidoElement.classList.add("pedido-card");
+                    pedidoElement.innerHTML = `
+                        <strong>${p.nome}</strong>
+                        <p><strong>Pedido:</strong> ${p.pedido}</p>
+                        <p><strong>Status do pagamento:</strong> ${p.pagamento}</p>
+                        <p><strong>Data do Pedido:</strong> ${p.dataPedido}</p>
+                        <p><strong>Hora da Entrega:</strong> ${p.horaEntrega}</p>
+                        <button onclick="editarPedido(${pedidos.indexOf(p)})">Editar</button>
+                        <button onclick="moverPedido(${pedidos.indexOf(p)})">Mover</button>
+                        <button onclick="excluirPedido(${pedidos.indexOf(p)})">Excluir</button>
+                    `;
+                    lista.appendChild(pedidoElement);
                 });
             });
         }
 
         function adicionarPedido() {
-            document.getElementById("overlay").style.display = 'block';
-            document.getElementById("popupAdicionar").style.display = 'block';
-        }
-
-        function salvarNovoPedido() {
-            let nome = document.getElementById("nome").value;
-            let pedido = document.getElementById("pedido").value;
-            let pagamento = document.getElementById("pagamento").value;
-            let dataPedido = document.getElementById("dataPedido").value;
-            let dataEntrega = document.getElementById("dataEntrega").value;
-
-            pedidos.push({
-                nome,
-                pedido,
-                pagamento,
-                dataPedido,
-                dataEntrega,
-                status: "efetuados"
-            });
-
-            salvarPedidos();
-            renderizarPedidos();
-            fecharPopup();
-        }
-
-        function abrirPopupMover(index) {
-            pedidoSelecionado = index;
-            document.getElementById("overlay").style.display = 'block';
-            document.getElementById("popupMover").style.display = 'block';
-        }
-
-        function moverPedidoConfirmado() {
-            let novaEtapa = document.getElementById("nova-etapa").value;
-            pedidos[pedidoSelecionado].status = novaEtapa;
-            salvarPedidos();
-            renderizarPedidos();
-            fecharPopup();
-        }
-
-        function abrirPopupEditar(index) {
-            pedidoSelecionado = index;
-            let pedido = pedidos[pedidoSelecionado];
-            document.getElementById("editar-nome").value = pedido.nome;
-            document.getElementById("editar-pedido").value = pedido.pedido;
-            document.getElementById("editar-pagamento").value = pedido.pagamento;
-            document.getElementById("editar-dataPedido").value = pedido.dataPedido;
-            document.getElementById("editar-dataEntrega").value = pedido.dataEntrega;
-
-            document.getElementById("overlay").style.display = 'block';
-            document.getElementById("popupEditar").style.display = 'block';
-        }
-
-        function salvarEdicao() {
-            let nome = document.getElementById("editar-nome").value;
-            let pedido = document.getElementById("editar-pedido").value;
-            let pagamento = document.getElementById("editar-pagamento").value;
-            let dataPedido = document.getElementById("editar-dataPedido").value;
-            let dataEntrega = document.getElementById("editar-dataEntrega").value;
-
-            pedidos[pedidoSelecionado] = { nome, pedido, pagamento, dataPedido, dataEntrega, status: pedidos[pedidoSelecionado].status };
-            salvarPedidos();
-            renderizarPedidos();
-            fecharPopup();
-        }
-
-        function abrirPopupExcluir(index) {
-            pedidoSelecionado = index;
-            document.getElementById("overlay").style.display = 'block';
-            document.getElementById("popupExcluir").style.display = 'block';
-        }
-
-        function excluirPedido() {
-            pedidos.splice(pedidoSelecionado, 1);
-            salvarPedidos();
-            renderizarPedidos();
-            fecharPopup();
+            document.getElementById("overlay").style.display = "block";
+            document.getElementById("popupAdicionar").style.display = "block";
         }
 
         function fecharPopup() {
-            document.getElementById("overlay").style.display = 'none';
-            document.querySelectorAll(".popup").forEach(popup => popup.style.display = 'none');
+            document.getElementById("overlay").style.display = "none";
+            document.querySelectorAll(".popup").forEach(popup => {
+                popup.style.display = "none";
+            });
         }
 
+        function salvarNovoPedido() {
+            const novoPedido = {
+                nome: document.getElementById("nome").value,
+                pedido: document.getElementById("pedido").value,
+                pagamento: document.getElementById("pagamento").value,
+                dataPedido: document.getElementById("dataPedido").value,
+                horaEntrega: document.getElementById("horaEntrega").value,
+                status: "efetuados"
+            };
+            pedidos.push(novoPedido);
+            salvarPedidos();
+            renderizarPedidos();
+            fecharPopup();
+        }
+
+        // Função para alternar status
         function toggleStatus(status) {
-            let coluna = document.getElementById(status);
-            let lista = coluna.querySelector(`#${status}-list`);
-            lista.style.display = lista.style.display === 'block' ? 'none' : 'block';
+            const statusPedidos = pedidos.filter(p => p.status === status);
+            statusPedidos.forEach(p => {
+                p.status = status === "efetuados" ? "agendados" : "efetuados";
+            });
+            salvarPedidos();
+            renderizarPedidos();
+        }
+
+        // Função para editar pedido
+        function editarPedido(index) {
+            pedidoSelecionado = pedidos[index];
+            document.getElementById("nome").value = pedidoSelecionado.nome;
+            document.getElementById("pedido").value = pedidoSelecionado.pedido;
+            document.getElementById("pagamento").value = pedidoSelecionado.pagamento;
+            document.getElementById("dataPedido").value = pedidoSelecionado.dataPedido;
+            document.getElementById("horaEntrega").value = pedidoSelecionado.horaEntrega;
+            adicionarPedido();
+        }
+
+        function excluirPedido(index) {
+            pedidos.splice(index, 1);
+            salvarPedidos();
+            renderizarPedidos();
         }
 
         renderizarPedidos();
