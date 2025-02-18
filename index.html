@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Pedidos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #333;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 600px;
+        }
+        .status-column {
+            background: white;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .pedido-card {
+            background: #fff;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        .pedido-card button {
+            margin-top: 5px;
+            padding: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Painel de Pedidos</h1>
+    <button onclick="adicionarPedido()">Adicionar Pedido</button>
+    <div class="container">
+        <div class="status-column" id="efetuados">
+            <h2>Efetuados</h2>
+        </div>
+        <div class="status-column" id="agendados">
+            <h2>Agendados</h2>
+        </div>
+        <div class="status-column" id="entregues">
+            <h2>Entregues</h2>
+        </div>
+        <div class="status-column" id="cancelados">
+            <h2>Cancelados</h2>
+        </div>
+    </div>
+    <script>
+        let pedidos = JSON.parse(localStorage.getItem("pedidos")) || [];
+
+        function salvarPedidos() {
+            localStorage.setItem("pedidos", JSON.stringify(pedidos));
+        }
+
+        function renderizarPedidos() {
+            document.querySelectorAll(".status-column").forEach(coluna => coluna.innerHTML = `<h2>${coluna.id.charAt(0).toUpperCase() + coluna.id.slice(1)}</h2>`);
+            pedidos.forEach((pedido, index) => {
+                let coluna = document.getElementById(pedido.status);
+                let card = document.createElement("div");
+                card.classList.add("pedido-card");
+                card.innerHTML = `<strong>${pedido.nome}</strong><br>Pedido: ${pedido.pedido}<br>Pagamento: ${pedido.pagamento}<br>Data: ${pedido.dataPedido}<br>Entrega: ${pedido.dataEntrega}
+                    <br><button onclick="moverPedido(${index})">Mover</button>`;
+                coluna.appendChild(card);
+            });
+        }
+
+        function adicionarPedido() {
+            let nome = prompt("Nome do Cliente:");
+            let pedido = prompt("Pedido:");
+            let pagamento = prompt("Status do Pagamento (Pago, Entrada, Pendente):");
+            let dataPedido = prompt("Data do Pedido:");
+            let dataEntrega = prompt("Data e Hora da Entrega:");
+            if (nome && pedido && pagamento && dataPedido && dataEntrega) {
+                pedidos.push({ nome, pedido, pagamento, dataPedido, dataEntrega, status: "efetuados" });
+                salvarPedidos();
+                renderizarPedidos();
+            }
+        }
+
+        function moverPedido(index) {
+            let statusAtual = pedidos[index].status;
+            let proximosStatus = ["efetuados", "agendados", "entregues", "cancelados"];
+            let novoStatus = proximosStatus[(proximosStatus.indexOf(statusAtual) + 1) % proximosStatus.length];
+            pedidos[index].status = novoStatus;
+            salvarPedidos();
+            renderizarPedidos();
+        }
+
+        renderizarPedidos();
+    </script>
+</body>
+</html>
